@@ -11,7 +11,7 @@ def printmatrix(matrix):
         print(s)
 
 def genericmatrix(n,maxw):
-    matrix = np.random.randint(-maxw, maxw, (n, n))
+    matrix = np.random.randint(-maxw, maxw+1, (n,n))
     np.fill_diagonal(matrix, 0)
     return matrix
 
@@ -23,28 +23,35 @@ def genericcomb(n):
             setopt.append(list(map(int, j)))
     return setopt
  
-def psearch(matrix,n,setopt):
+def gencombmatrix(n,setopt):
     v = np.ones(n,int)
+    combmatrix = np.array([])
     for i in setopt:
         v2 = np.copy(v)
         for j in range(n):
             if j not in i: v2[j]=-1
-        x = np.dot(v2,matrix)
-        x = x*v2
-        if (x>=0).all(): print('Sustainable coalitions: ',i,'; Win difference: ',x)
-
-   
-start_time = time.time()
+        combmatrix = np.append(combmatrix,v2)
+    combmatrix.shape = int(len(combmatrix)/n),n
+    return combmatrix
+    
+def psearch(matrix,combmatrix,setopt):
+    x = np.matmul(combmatrix,matrix)
+    x = x*combmatrix
+    arr = np.amin(x, axis = 1)
+    arr2 = np.where(arr >= 0)[0]
+    print('Sustainable coalitions: ',np.array(setopt,dtype='object')[arr2])
+    
 #const     
-n = 3
-maxw = 10
+n = 6
+maxw = 1
 ###
-#matrix = genericmatrix(n,maxw)
-matrix = np.array([[0,1,2],[1,0,-1],[2,-1,0]])
+matrix = genericmatrix(n,maxw)
+#matrix = np.array([[0,1,2],[1,0,-1],[2,-1,0]])
 print(matrix)
 #printmatrix(matrix)
 #start_time = time.time()
 setopt = genericcomb(n)
-#start_time = time.time()
-psearch(matrix,n,setopt)
-print('time = %s seconds' % (time.time() - start_time))
+combmatrix = gencombmatrix(n,setopt)
+start_time = time.time()
+psearch(matrix,combmatrix,setopt)
+print('Search time = %s seconds' % (time.time() - start_time))
