@@ -27,6 +27,21 @@ def genericmatrixones(n): #Генерация матрицы плюс-минус
     np.fill_diagonal(matrix, 0)
     return matrix
 
+def genericmatrixsymones(n): #Генерация матрицы плюс-минус единиц с симметричными ребрами
+    matrix = np.array([])
+    for i in range(n):
+        row = np.array([])
+        for j in range(n):
+            if i<j: c = np.random.choice([-1,1])
+            else: c = 0
+            row = np.append(row,c)
+        matrix = np.append(row,matrix)
+    matrix = np.reshape(matrix,(n,n))
+    matrix = np.fliplr(matrix)
+    matrix = np.tril(matrix) + np.triu(matrix.T, 1)
+    np.fill_diagonal(matrix, 0)
+    return matrix
+
 def genericallcombones(n): #Генерация всех возможных матриц из единиц и минус единиц
     for i in product([1,-1], repeat=(n*(n-1))):
         arr = np.array(list(i))
@@ -38,7 +53,7 @@ def genericallcombones(n): #Генерация всех возможных ма�
 def genericcomb(n): #Генерация всех возможных коалиций
     s = ''.join(list(map(str,range(0,n))))
     setopt = []
-    for i in range(2,len(s)+1):
+    for i in range(1,len(s)+1):
         for j in combinations(s, i):
             setopt.append(list(map(int, j)))
     return setopt
@@ -55,26 +70,94 @@ def gencombmatrix(n,setopt): #Генерация матрицы всех воз�
     return combmatrix
     
 def psearch(matrix,combmatrix,setopt,p): #Поиск устойчивых коалиций
+    global imparr
     x = np.matmul(combmatrix,matrix)
     x = x*combmatrix
     arr = np.amin(x, axis = 1)
     arr2 = np.where(arr >= 0)[0]
-    if p == True: print('Sustainable coalitions: ',np.array(setopt,dtype='object')[arr2])
+    if p == True:
+        print('Sustainable coalitions: ',np.array(setopt,dtype='object')[arr2])
+        #print(x)
+    elif (p == False) and (len(np.array(setopt,dtype='object')[arr2])>0):
+        #print(np.array(setopt,dtype='object')[arr2])
+        return 1
+    elif (p == False) and (len(np.array(setopt,dtype='object')[arr2])==0):
+        return 0
 
-def main(matrix,setopt,combmatrix,p):
-    psearch(matrix,combmatrix,setopt,p)
-    
-#const     
-n = 4
+def save(d,countname,matrix): #Сохранение матрицы в файл
+    if d == 0:
+        np.savetxt('filestxt/ex'+str(countname)+'.txt',i)
+        np.save('filesnpy/ex'+str(countname)+'.npy',i)
+
+def symsearch(matrix): #Счет несимметричных ребер
+    c = 0
+    for i in range(len(matrix)):
+        for j in range(len(matrix)):
+            if (matrix[i][j]!=matrix[j][i]) and (i!=j): c+=1
+    return(c//2)
+
+def main(n,setopt,combmatrix):
+    start_time = time.time()
+    print(2**(n*(n-1)),'iterations expected')
+    c = 0
+    arrn = []
+    arrcountn = []
+    for count,i in enumerate(genericallcombones(n)):
+        if int(count%countprint)==0: print(count,'-',(time.time() - start_time),'seconds')
+        d = psearch(i,combmatrix,setopt,False)
+        c += d
+        n = symsearch(i)
+        if (n in arrn) and (d==0):
+            arrcountn[arrn.index(n)]+=1
+        elif (n not in arrn) and (d==0):
+            arrn.append(n)
+            arrcountn.append(1)
+            #save(d,count,i)
+    print(c)
+    print(arrn,'num:',arrcountn)
+    print('Search time = %s seconds' % (time.time() - start_time))
+
+def gen(combmatrix,setopt):
+    matrix = genericmatrixsymones(n)
+    x = psearch(matrix,combmatrix,setopt,False)
+    if x==0:
+         return 0
+         exit
+    last = []
+    a = 0
+    b = 0
+    for i in range(1,((n*(n-1))//2)+1):
+        while True:
+            a = random.randrange(n)
+            b = random.randrange(n)
+            if ([a,b] not in last) and (([b,a]) not in last) and a!=b: break
+        #print(a,b)
+        last.append([a,b])
+        matrix[a][b] = matrix[a][b]*-1
+        #if i == 44: print(matrix)
+        x = psearch(matrix,combmatrix,setopt,False)
+        if x==0:
+             if i==1:
+                 print(matrix, a, b)
+                 psearch(matrix,combmatrix,setopt,True)
+                 matrix[a][b] = matrix[a][b]*-1
+                 print(matrix, a, b)
+                 psearch(matrix,combmatrix,setopt,True)
+             return i
+    return -1
+
+#const
+n = 10
 maxw = 1
-countprint = 1000
+countprint = 10000
 ###
 setopt = genericcomb(n)
 combmatrix = gencombmatrix(n,setopt)
-start_time = time.time()
-print(2**(n*(n-1)),'iterations expected')
-for count,i in enumerate(genericallcombones(n)):
-    if int(count%countprint)==0: print(count,'-',(time.time() - start_time),'seconds')
-    main(i,setopt,combmatrix,False)
-print('Search time = %s seconds' % (time.time() - start_time))
-
+#main(n,setopt,combmatrix)
+arr = []
+for i in range(5000):
+    z = gen(combmatrix,setopt)
+    if z!=-1: arr.append(z)
+print('Medium', sum(arr)/len(arr))
+print('Minimum', min(arr))
+print('Number of minimum', arr.count(min(arr)))
