@@ -1,6 +1,7 @@
 import random
-import numpy as np
 import time
+
+import numpy as np
 from itertools import *
 
 def printmatrix(matrix): #Красивый вывод матрицы
@@ -229,16 +230,16 @@ def CountOfEqSymMatrix(n,setopt,combmatrix): #Зависимость числа 
     print('The dependence of the number of such equilibria on the number of equilibria in the graph:',d)
 
 #const
-n = 6
-maxw = 1
+n = 6 #Размер матрицы
+maxw = 1 #Максимальный вес
 countprint = 10000
 ###
 
-setopt = genericcomb(n)
-combmatrix = gencombmatrix(n,setopt)
+setopt = genericcomb(n) #Матрица всех возможных коалиций
+combmatrix = gencombmatrix(n,setopt) #Матрица всех возможных разбиений (в 1 и -1)
 #main(n,setopt,combmatrix)
 #NumAllSymEdges(setopt,combmatrix)
-AreThereBadEdgesDntBreakEq(n,setopt,combmatrix)
+#AreThereBadEdgesDntBreakEq(n,setopt,combmatrix)
 #CountOfEqSymMatrix(n,setopt,combmatrix)
 
 
